@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Readyby - get every dish ready at the same time</title>
+<meta name="description" content="Tell Readyby what you're cooking and when you want to eat. It works out when to start each dish so the roast, the potatoes and the veg all land together, with safe pull temperatures and an oven-clash check.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='56' r='34' fill='none' stroke='%23c6552f' stroke-width='9'/%3E%3Cline x1='50' y1='56' x2='50' y2='36' stroke='%23c6552f' stroke-width='9' stroke-linecap='round'/%3E%3Cline x1='50' y1='56' x2='66' y2='56' stroke='%23c6552f' stroke-width='9' stroke-linecap='round'/%3E%3Crect x='42' y='8' width='16' height='10' rx='3' fill='%23c6552f'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#when">Skip to the planner</a>
+
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 100 100" width="34" height="34"><circle cx="50" cy="56" r="34" fill="none" stroke="currentColor" stroke-width="9"/><line x1="50" y1="56" x2="50" y2="36" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><line x1="50" y1="56" x2="66" y2="56" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><rect x="42" y="8" width="16" height="10" rx="3" fill="currentColor"/></svg>
+    </span>
+    <h1>Readyby</h1>
+  </div>
+  <p class="tag">Start everything at the right time so the whole meal lands together.</p>
+</header>
+
+<main>
+  <section class="card" id="when" aria-labelledby="when-h">
+    <h2 id="when-h">When do you want to eat?</h2>
+    <label class="field time-field">
+      <span>Serving time</span>
+      <input id="serve" type="time" value="18:00">
+    </label>
+  </section>
+
+  <section class="card" aria-labelledby="dishes-h">
+    <h2 id="dishes-h">What's cooking?</h2>
+    <p class="lead">Pick a centrepiece and the sides. The weight sets the roasting time; everything else has a set time.</p>
+
+    <h3 class="group-h">Centrepiece</h3>
+    <div class="chips" id="chips-meat"></div>
+
+    <div id="meat-detail" class="meat-detail hidden"></div>
+
+    <h3 class="group-h">From the oven</h3>
+    <div class="chips" id="chips-oven"></div>
+
+    <h3 class="group-h">On the hob and to finish</h3>
+    <div class="chips" id="chips-hob"></div>
+  </section>
+
+  <div class="actions big">
+    <button type="button" id="go" class="primary">Plan it</button>
+    <button type="button" id="example" class="ghost">Try a Sunday roast</button>
+  </div>
+
+  <section class="card result hidden" id="result" aria-labelledby="result-h" aria-live="polite">
+    <h2 id="result-h">Your timeline</h2>
+    <p class="verdict" id="verdict"></p>
+
+    <div id="warnings"></div>
+
+    <ol class="timeline" id="timeline"></ol>
+
+    <div id="temps" class="temps"></div>
+
+    <div class="actions">
+      <button type="button" id="copy" class="ghost small">Copy the plan</button>
+    </div>
+    <p class="said" id="said" aria-live="polite"></p>
+  </section>
+
+  <details class="note">
+    <summary>How Readyby works out the times</summary>
+    <p>The awkward part of a roast dinner is never one dish on its own, it is landing the meat, the potatoes and the veg at the same moment. Readyby schedules backwards from the time you want to serve. Each dish has a cooking time, fixed for the sides and set by weight for the meats, and the meats also carry a rest, so they come out of the oven early, sit, and are carved just as everything else is dished up.</p>
+    <p>Roasting times follow the <a href="https://www.foodsafety.gov/food-safety-charts/meat-poultry-charts">USDA and FoodSafety.gov roasting guidance</a>, and the pull temperatures are the USDA safe minimums: 165F for all poultry, and 145F with a three-minute rest for beef, pork and lamb. A clock is only ever an estimate, so Readyby shows a time window and always names the temperature to check with a thermometer, which is the only thing that actually tells you a joint is done.</p>
+    <p>Two things fall out of scheduling backwards. If two dishes in the oven want different temperatures at the same time, Readyby flags it with the exact minutes and both temperatures. And while a joint rests out of the oven, the oven is free and still hot, which is the moment to turn it up for the roast potatoes. Readyby spots that gap and tells you.</p>
+    <p>It plans from the longer end of each time range, so you are never caught short, and it is a guide, not a substitute for a thermometer.</p>
+  </details>
+</main>
+
+<footer class="foot">
+  <p>Made by <a href="https://johanthegoat.xyz">Johan</a>. <a href="https://github.com/johanthegoatt/readyby">Code</a>.</p>
+</footer>
+
+<!-- Ding, the kitchen timer -->
+<div class="ding-dock" id="ding-dock">
+  <p class="ding-bubble" id="ding-bubble" role="status" aria-live="polite"></p>
+  <button class="ding" id="ding" type="button" data-mood="idle" aria-label="Ding the kitchen timer. Tap for a tip.">
+    <svg viewBox="0 0 120 130" width="84" height="91" aria-hidden="true">
+      <rect class="d-bell" x="52" y="10" width="16" height="9" rx="3"/>
+      <circle class="d-body" cx="60" cy="72" r="42"/>
+      <circle class="d-face" cx="60" cy="72" r="33"/>
+      <g class="d-eyes">
+        <circle class="d-eyewhite" cx="48" cy="66" r="8"/>
+        <circle class="d-eyewhite" cx="72" cy="66" r="8"/>
+        <circle class="d-eye" cx="48" cy="66" r="3.4"/>
+        <circle class="d-eye" cx="72" cy="66" r="3.4"/>
+      </g>
+      <path class="d-mouth" d="M50 86 Q60 94 70 86" fill="none" stroke-width="3.4" stroke-linecap="round"/>
+      <line class="d-hand" x1="60" y1="72" x2="60" y2="50" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <button class="ding-hide" id="ding-hide" type="button" aria-label="Tuck Ding away">tuck</button>
+</div>
+
+<script src="src/engine.js"></script>
+<script src="src/ding.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
