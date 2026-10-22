@@ -1,0 +1,10 @@
+{
+  "name": "readyby",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tell Readyby what you're cooking and when you want to eat, and it works out when to start every dish so the whole meal lands together, with safe pull temperatures and an oven-clash check. With Ding the kitchen timer.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
