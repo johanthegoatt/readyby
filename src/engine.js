@@ -279,8 +279,19 @@
     var ovenConflicts = ovenClashes(planned);
     var rest = restWindowHint(planned, serve);
 
+    var holding = holdingWindow(serve, { hotRoom: input.hotRoom });
+
     // A single ordered list of actions the cook follows top to bottom.
     var steps = buildSteps(planned, serve);
+    if (holding) {
+      steps.push({
+        at: holding.awayBy,
+        kind: "away",
+        dish: null,
+        text: "Leftovers into the fridge by now (" + holding.limitMins + " min after serving" +
+          (holding.hotRoom ? ", hot room" : "") + ")"
+      });
+    }
 
     return {
       ok: true,
@@ -290,6 +301,7 @@
       items: planned,
       ovenConflicts: ovenConflicts,
       restWindow: rest,
+      holding: holding,
       steps: steps
     };
   }
@@ -372,9 +384,34 @@
     return steps;
   }
 
+  // Food left in the "danger zone" (40F to 140F / 4C to 60C) grows bacteria
+  // fast. The USDA / FoodSafety.gov rule: get cooked, perishable food into the
+  // fridge within 2 hours of serving, or within 1 hour if the room is hot
+  // (above 90F / 32C), like a summer table or a warm kitchen. This works out
+  // the clock from your serving time so the leftovers go away in time.
+  var HOLD_NORMAL_MINS = 120;
+  var HOLD_HOT_MINS = 60;
+
+  function holdingWindow(serveTime, opts) {
+    opts = opts || {};
+    var serve = typeof serveTime === "number" ? serveTime : parseTime(serveTime);
+    if (serve == null) return null;
+    var hot = !!opts.hotRoom; // room above 90F / 32C
+    var limit = hot ? HOLD_HOT_MINS : HOLD_NORMAL_MINS;
+    return {
+      hotRoom: hot,
+      limitMins: limit,
+      awayBy: serve + limit,
+      // Past midnight the clock wraps; keep it as plain minutes-from-midnight.
+      wrapped: serve + limit >= 24 * 60
+    };
+  }
+
   return {
     CATALOG: CATALOG,
     DONENESS: DONENESS,
+    HOLD_NORMAL_MINS: HOLD_NORMAL_MINS,
+    HOLD_HOT_MINS: HOLD_HOT_MINS,
     byId: byId,
     parseTime: parseTime,
     fmtTime: fmtTime,
@@ -382,6 +419,7 @@
     pounds: pounds,
     cookTime: cookTime,
     pullTemp: pullTemp,
+    holdingWindow: holdingWindow,
     planMeal: planMeal
   };
 });
