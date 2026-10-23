@@ -142,6 +142,10 @@ button { font: inherit; }
 .step-rest .step-text { color: var(--muted); }
 .step-serve { font-weight: 600; }
 .step-serve .step-text::before { content: "\1F37D\FE0F "; }
+.step-away .step-text { color: var(--muted); }
+.step-away .step-text::before { content: "\2744\FE0F "; }
+.check-field { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 0.95rem; color: var(--muted); cursor: pointer; }
+.check-field input { width: auto; min-height: 0; margin-top: 2px; }
 
 .temps { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .temp-card {

@@ -7,6 +7,7 @@
   var R = window.Readyby;
 
   var serveEl = document.getElementById("serve");
+  var hotRoomEl = document.getElementById("hot-room");
   var chipsMeat = document.getElementById("chips-meat");
   var chipsOven = document.getElementById("chips-oven");
   var chipsHob = document.getElementById("chips-hob");
@@ -125,7 +126,7 @@
       return;
     }
     if (window.Ding) window.Ding.react("thinking");
-    var out = R.planMeal({ serveTime: serveEl.value, items: items });
+    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked });
     result.classList.remove("hidden");
     if (!out.ok) {
       if (window.Ding) window.Ding.react("worried");
@@ -181,7 +182,7 @@
 
   function copyPlan() {
     var items = collectItems();
-    var out = R.planMeal({ serveTime: serveEl.value, items: items });
+    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked });
     if (!out.ok) return;
     var lines = ["Readyby plan - serve at " + R.fmtTime(out.serveTime), ""];
     out.steps.forEach(function (s) { lines.push(R.fmtTime(s.at) + "  " + s.text); });
