@@ -130,18 +130,51 @@ test("rest window is found while a single resting meat sits out", () => {
   assert.ok(plan.restWindow.suggest.indexOf("Roast potatoes") !== -1);
 });
 
-test("steps are ordered by time and end with serving", () => {
+test("steps are ordered by time, serving last before the leftovers reminder", () => {
   const plan = R.planMeal({
     serveTime: "18:00",
     items: [{ id: "chicken", weight: 4 }, { id: "gravy" }]
   });
   const ats = plan.steps.map(s => s.at);
   for (let i = 1; i < ats.length; i++) assert.ok(ats[i] >= ats[i - 1]);
-  assert.strictEqual(plan.steps[plan.steps.length - 1].kind, "serve");
+  // The cooking ends with serving; the only thing after it is the fridge reminder.
+  const cookingSteps = plan.steps.filter(s => s.kind !== "away");
+  assert.strictEqual(cookingSteps[cookingSteps.length - 1].kind, "serve");
+  assert.strictEqual(plan.steps[plan.steps.length - 1].kind, "away");
 });
 
 test("first start is the earliest hand needed and matches the span", () => {
   const plan = R.planMeal({ serveTime: "18:00", items: [{ id: "turkey", weight: 12 }] });
   assert.strictEqual(plan.firstStart, plan.items[0].startAt);
   assert.strictEqual(plan.totalSpan, plan.serveTime - plan.firstStart);
+});
+
+test("holding window is 2 hours after serving by default", () => {
+  const h = R.holdingWindow("18:00");
+  assert.strictEqual(h.limitMins, 120);
+  assert.strictEqual(h.hotRoom, false);
+  assert.strictEqual(h.awayBy, R.parseTime("20:00"));
+});
+
+test("a hot room (above 90F) cuts the window to 1 hour", () => {
+  const h = R.holdingWindow("18:00", { hotRoom: true });
+  assert.strictEqual(h.limitMins, 60);
+  assert.strictEqual(h.hotRoom, true);
+  assert.strictEqual(h.awayBy, R.parseTime("19:00"));
+});
+
+test("holding window wrap flag is set for a late serving", () => {
+  assert.strictEqual(R.holdingWindow("23:30").wrapped, true);
+  assert.strictEqual(R.holdingWindow("18:00").wrapped, false);
+});
+
+test("planMeal carries the holding window and an 'away' step", () => {
+  const plan = R.planMeal({ serveTime: "18:00", items: [{ id: "turkey", weight: 12 }] });
+  assert.strictEqual(plan.ok, true);
+  assert.strictEqual(plan.holding.awayBy, R.parseTime("20:00"));
+  const away = plan.steps.find((s) => s.kind === "away");
+  assert.ok(away, "has an away step");
+  assert.strictEqual(away.at, R.parseTime("20:00"));
+  // the away step is the very last thing the cook does
+  assert.strictEqual(plan.steps[plan.steps.length - 1].kind, "away");
 });
