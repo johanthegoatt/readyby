@@ -171,8 +171,19 @@
       var c = Math.round((p.pull.f - 32) * 5 / 9);
       var div = document.createElement("div");
       div.className = "temp-card" + (p.pull.belowSafe ? " below" : "");
-      div.innerHTML = "<strong>" + p.name + "</strong><span>pull at " + p.pull.f + "F / " + c + "C</span>" +
-        (p.pull.belowSafe ? '<em>below the USDA safe 145F, a cook\'s choice</em>' : "");
+      var head = "<strong>" + p.name + "</strong>";
+      if (p.ovenPull) {
+        // Pull from the oven early and let carryover coast it up to the target.
+        var fc = Math.round((p.ovenPull.fromF - 32) * 5 / 9);
+        var tc = Math.round((p.ovenPull.toF - 32) * 5 / 9);
+        div.innerHTML = head +
+          "<span>pull at " + p.ovenPull.fromF + "-" + p.ovenPull.toF + "F / " + fc + "-" + tc + "C</span>" +
+          "<em>rises about " + p.ovenPull.riseLow + "-" + p.ovenPull.riseHigh + "F while resting, to " + p.pull.f + "F / " + c + "C" +
+          (p.ovenPull.belowSafe ? " (below the USDA safe 145F, a cook's choice)" : "") + "</em>";
+      } else {
+        div.innerHTML = head + "<span>pull at " + p.pull.f + "F / " + c + "C</span>" +
+          (p.pull.belowSafe ? '<em>below the USDA safe 145F, a cook\'s choice</em>' : "");
+      }
       temps.appendChild(div);
     });
 
