@@ -178,3 +178,35 @@ test("planMeal carries the holding window and an 'away' step", () => {
   // the away step is the very last thing the cook does
   assert.strictEqual(plan.steps[plan.steps.length - 1].kind, "away");
 });
+
+test("oven pull sits below the target by the carryover rise", () => {
+  // Beef pulled to medium (target 145F), carryover 5-10F: pull at 135-140F.
+  const op = R.ovenPull(R.byId("beef"), { doneness: "medium" });
+  assert.strictEqual(op.targetF, 145);
+  assert.strictEqual(op.fromF, 135); // bigger/hotter roast carries over more (10F)
+  assert.strictEqual(op.toF, 140);   // smaller roast carries over less (5F)
+  assert.strictEqual(op.riseLow, 5);
+  assert.strictEqual(op.riseHigh, 10);
+});
+
+test("a chosen doneness moves the oven-pull window with the target", () => {
+  const med = R.ovenPull(R.byId("beef"), { doneness: "medium" });       // target 145
+  const rare = R.ovenPull(R.byId("beef"), { doneness: "medium-rare" }); // target 135
+  assert.ok(rare.fromF < med.fromF && rare.toF < med.toF);
+});
+
+test("hob and finish dishes have no oven-pull", () => {
+  assert.strictEqual(R.ovenPull(R.byId("mash"), {}), null);
+  assert.strictEqual(R.ovenPull(R.byId("gravy"), {}), null);
+  assert.strictEqual(R.ovenPull(R.byId("roast-potatoes"), {}), null); // no rest
+});
+
+test("planMeal attaches the oven-pull to a resting roast and names it in the rest step", () => {
+  const plan = R.planMeal({ serveTime: "18:00", items: [{ id: "chicken", weight: 4 }] });
+  const bird = plan.items.find((p) => p.id === "chicken");
+  assert.ok(bird.ovenPull, "chicken has an oven-pull");
+  assert.strictEqual(bird.ovenPull.targetF, 165);
+  assert.strictEqual(bird.ovenPull.fromF, 157); // 165 - 8
+  const restStep = plan.steps.find((s) => s.kind === "rest");
+  assert.ok(/climbs to about 165F/.test(restStep.text));
+});
