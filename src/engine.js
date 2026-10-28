@@ -46,6 +46,7 @@
       minPerLb: [20, 25],
       rest: 15,
       safeF: 165,
+      carryover: [5, 8],
       icon: "chicken",
       note: "Roast at 350F until the thickest part of the thigh reads 165F."
     },
@@ -58,6 +59,7 @@
       minPerLb: [13, 15],
       rest: 20,
       safeF: 165,
+      carryover: [8, 12],
       icon: "turkey",
       note: "Roast at 325F to 165F in the thigh. Loosely tent with foil if it browns early."
     },
@@ -70,6 +72,7 @@
       minPerLb: [15, 18],
       rest: 20,
       safeF: 165,
+      carryover: [8, 12],
       icon: "turkey",
       note: "The stuffing itself must reach 165F, so a stuffed bird takes longer."
     },
@@ -82,6 +85,7 @@
       minPerLb: [18, 22], // to a pull around medium; adjusted by doneness below
       rest: 15,
       safeF: 145,
+      carryover: [5, 10],
       doneness: true,
       icon: "beef",
       note: "USDA safe is 145F then a 3-minute rest. Pull earlier only by choice."
@@ -95,6 +99,7 @@
       minPerLb: [20, 22],
       rest: 10,
       safeF: 145,
+      carryover: [5, 10],
       icon: "pork",
       note: "Pull at 145F and rest 3 minutes (USDA). Pork is fine faintly pink."
     },
@@ -107,6 +112,7 @@
       minPerLb: [15, 20],
       rest: 15,
       safeF: 145,
+      carryover: [5, 8],
       doneness: true,
       icon: "lamb",
       note: "USDA safe is 145F and a 3-minute rest."
@@ -221,6 +227,32 @@
     return { f: dish.safeF, belowSafe: false };
   }
 
+  // The temperature to take a roast OUT of the oven, allowing for carryover:
+  // a big roast keeps cooking off the heat and its middle climbs a few more
+  // degrees while it rests, so you pull it early and let it coast up to the
+  // target rather than overshoot. The rise is larger for a bigger, hotter
+  // roast (ThermoWorks: pull 3-10F below target). Returns a small range,
+  // because the rise is a range, together with the temperature it lands at.
+  //   fromF / toF  the window to pull it in (toF for a smaller/cooler roast,
+  //                fromF for a bigger/hotter one, which carries over more)
+  //   targetF      the rested temperature it climbs to (the pullTemp target)
+  //   riseLow/High the carryover rise in F
+  // Null for a dish with no rest or no carryover figure (hob sides, etc.).
+  function ovenPull(dish, opts) {
+    if (!dish || !dish.rest || !dish.carryover) return null;
+    var target = pullTemp(dish, opts);
+    if (!target) return null;
+    var lo = dish.carryover[0], hi = dish.carryover[1];
+    return {
+      fromF: target.f - hi,   // bigger/hotter roast: carries over more, pull earlier
+      toF: target.f - lo,     // smaller/cooler roast: carries over less
+      targetF: target.f,
+      riseLow: lo,
+      riseHigh: hi,
+      belowSafe: target.belowSafe
+    };
+  }
+
   // ---- the plan -----------------------------------------------------------
 
   // planMeal({ serveTime, items: [{ id, weight?, doneness? }] })
@@ -265,6 +297,7 @@
         cook: ct,
         rest: rest,
         pull: pullTemp(dish, it),
+        ovenPull: ovenPull(dish, it),
         startAt: startHigh,          // plan from the longer estimate
         startAtEarliest: startLow,
         ovenInAt: dish.kind === "oven" ? startHigh : null,
@@ -371,7 +404,9 @@
           at: p.outAt,
           kind: "rest",
           dish: p.name,
-          text: "Take out " + p.name + " and let it rest" + (p.pull ? " (check " + p.pull.f + "F)" : "")
+          text: "Take out " + p.name + " and let it rest" + (p.ovenPull
+            ? " (pull at " + p.ovenPull.fromF + "-" + p.ovenPull.toF + "F; it climbs to about " + p.ovenPull.targetF + "F while resting)"
+            : p.pull ? " (check " + p.pull.f + "F)" : "")
         });
       }
     });
@@ -419,6 +454,7 @@
     pounds: pounds,
     cookTime: cookTime,
     pullTemp: pullTemp,
+    ovenPull: ovenPull,
     holdingWindow: holdingWindow,
     planMeal: planMeal
   };
