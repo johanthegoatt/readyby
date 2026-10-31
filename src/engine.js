@@ -427,6 +427,46 @@
   var HOLD_NORMAL_MINS = 120;
   var HOLD_HOT_MINS = 60;
 
+  // Keeping a dish warm when it's ready BEFORE serving (a different question
+  // from how long it can sit out after). The safe rule is to hold hot food at or
+  // above 60C / 140F; a warm oven at 70-80C (160-175F) does that. A tented joint
+  // holds carving heat for a rest of 30-45 min but then falls below the line, so
+  // after that it goes in the warm oven. Food safety has no time limit while it
+  // stays above 60C; quality is the limit, about 2 hours before most things dry
+  // out. Figures from the USDA "keep hot food hot" guidance.
+  var SAFE_HOT_F = 140, SAFE_HOT_C = 60;
+  var REST_HOLD_MINS = 45, WARM_OVEN_QUALITY_MINS = 120;
+
+  function keepWarm(opts) {
+    opts = opts || {};
+    var mins = parseFloat(opts.minutesEarly);
+    mins = isFinite(mins) && mins > 0 ? Math.round(mins) : 0;
+    var method = /^(warm-oven|resting|room)$/.test(opts.method) ? opts.method : "warm-oven";
+    var out = { minutesEarly: mins, method: method, safeHotF: SAFE_HOT_F, safeHotC: SAFE_HOT_C };
+
+    if (method === "room") {
+      out.safe = mins <= HOLD_NORMAL_MINS;
+      out.safeMinutes = HOLD_NORMAL_MINS;
+      out.overByMinutes = Math.max(0, mins - HOLD_NORMAL_MINS);
+      out.note = out.safe
+        ? "Left on the side, cooked food is good for up to 2 hours total. Cover it to hold the heat and serve within that."
+        : "Past the 2-hour limit for food left out. Keep it hot in a warm oven (70-80C / 160-175F) instead, or chill it down.";
+    } else if (method === "resting") {
+      out.safe = true;
+      out.qualityMinutes = REST_HOLD_MINS;
+      out.note = mins <= REST_HOLD_MINS
+        ? "A joint holds carving heat tented in foil for 30-45 min. Rest it loosely covered and carve just before serving."
+        : "That's longer than a rest. After about 45 min it drops below 60C, so move it to a warm oven (70-80C / 160-175F) to stay safe.";
+    } else {
+      out.safe = true;
+      out.qualityMinutes = WARM_OVEN_QUALITY_MINS;
+      out.note = mins <= WARM_OVEN_QUALITY_MINS
+        ? "Hold it covered in a warm oven at 70-80C / 160-175F, above the 60C / 140F safe line. Good for up to about 2 hours before it dries."
+        : "Safe while it stays above 60C / 140F, but after about 2 hours the quality drops. Add a splash of stock, keep it covered, and check it's piping hot before serving.";
+    }
+    return out;
+  }
+
   function holdingWindow(serveTime, opts) {
     opts = opts || {};
     var serve = typeof serveTime === "number" ? serveTime : parseTime(serveTime);
@@ -456,6 +496,7 @@
     pullTemp: pullTemp,
     ovenPull: ovenPull,
     holdingWindow: holdingWindow,
+    keepWarm: keepWarm,
     planMeal: planMeal
   };
 });
