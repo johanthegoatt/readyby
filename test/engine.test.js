@@ -210,3 +210,34 @@ test("planMeal attaches the oven-pull to a resting roast and names it in the res
   const restStep = plan.steps.find((s) => s.kind === "rest");
   assert.ok(/climbs to about 165F/.test(restStep.text));
 });
+
+test("keepWarm: warm oven holds safely, quality caps at ~2 hours", () => {
+  const r = R.keepWarm({ minutesEarly: 40, method: "warm-oven" });
+  assert.equal(r.safe, true);
+  assert.equal(r.safeHotC, 60);
+  assert.equal(r.qualityMinutes, 120);
+  assert.match(r.note, /warm oven/);
+});
+
+test("keepWarm: a long warm-oven hold warns on quality, not safety", () => {
+  const r = R.keepWarm({ minutesEarly: 150, method: "warm-oven" });
+  assert.equal(r.safe, true);
+  assert.match(r.note, /quality drops/);
+});
+
+test("keepWarm: resting is fine up to 45 min, then move to the oven", () => {
+  assert.match(R.keepWarm({ minutesEarly: 30, method: "resting" }).note, /tented in foil/);
+  assert.match(R.keepWarm({ minutesEarly: 70, method: "resting" }).note, /warm oven/);
+});
+
+test("keepWarm: left out follows the 2-hour rule", () => {
+  const ok = R.keepWarm({ minutesEarly: 90, method: "room" });
+  assert.equal(ok.safe, true);
+  const over = R.keepWarm({ minutesEarly: 150, method: "room" });
+  assert.equal(over.safe, false);
+  assert.equal(over.overByMinutes, 30);
+});
+
+test("keepWarm: defaults to the warm-oven method", () => {
+  assert.equal(R.keepWarm({ minutesEarly: 20 }).method, "warm-oven");
+});
