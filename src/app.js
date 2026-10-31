@@ -213,9 +213,24 @@
     plan();
   }
 
+  function keepWarm() {
+    var note = document.getElementById("kw-note");
+    if (!note) return;
+    var minsEl = document.getElementById("kw-mins");
+    var mins = parseFloat((minsEl.value || "").replace(/[^0-9.]/g, ""));
+    if (!isFinite(mins) || mins <= 0) { note.textContent = ""; return; }
+    var r = R.keepWarm({ minutesEarly: mins, method: document.getElementById("kw-method").value });
+    note.textContent = r.note;
+    note.className = "kw-note" + (r.safe ? "" : " warn");
+  }
+
   document.getElementById("go").addEventListener("click", plan);
   document.getElementById("example").addEventListener("click", example);
   document.getElementById("copy").addEventListener("click", copyPlan);
+  ["kw-mins", "kw-method"].forEach(function (id) {
+    var e = document.getElementById(id);
+    if (e) { e.addEventListener("input", keepWarm); e.addEventListener("change", keepWarm); }
+  });
 
   renderChips();
   renderMeatDetail();

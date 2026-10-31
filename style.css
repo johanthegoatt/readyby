@@ -225,3 +225,11 @@ button { font: inherit; }
   .ding svg { width: 64px; height: 70px; }
   .brand h1 { font-size: 1.6rem; }
 }
+
+/* ---- keep warm (finished early) ---- */
+.kw-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.kw-field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 160px; }
+.kw-field span { font-size: 13px; font-weight: 600; }
+.kw-field input, .kw-field select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); width: 100%; }
+.kw-note { margin: 12px 0 0; font-size: 14px; }
+.kw-note.warn { color: var(--warn, #b5701c); font-weight: 600; }

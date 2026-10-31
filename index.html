@@ -72,6 +72,26 @@
     <p class="said" id="said" aria-live="polite"></p>
   </section>
 
+  <section class="card" id="keepwarm" aria-labelledby="kw-h">
+    <h2 id="kw-h">Finished early? Keep it warm</h2>
+    <p class="hint">A dish is ready before you're serving. Here's how to hold it so it stays safe (above 60C / 140F) and still good to eat.</p>
+    <div class="kw-row">
+      <label class="kw-field">
+        <span>Ready this early</span>
+        <input id="kw-mins" type="text" inputmode="numeric" placeholder="e.g. 40 min">
+      </label>
+      <label class="kw-field">
+        <span>How you'll hold it</span>
+        <select id="kw-method">
+          <option value="warm-oven">In a warm oven (70-80C)</option>
+          <option value="resting">Resting, tented in foil</option>
+          <option value="room">Left on the side</option>
+        </select>
+      </label>
+    </div>
+    <p class="kw-note" id="kw-note" aria-live="polite"></p>
+  </section>
+
   <details class="note">
     <summary>How Readyby works out the times</summary>
     <p>The awkward part of a roast dinner is never one dish on its own, it is landing the meat, the potatoes and the veg at the same moment. Readyby schedules backwards from the time you want to serve. Each dish has a cooking time, fixed for the sides and set by weight for the meats, and the meats also carry a rest, so they come out of the oven early, sit, and are carved just as everything else is dished up.</p>
