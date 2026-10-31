@@ -20,6 +20,7 @@ The fix is to work backwards from the time you want to eat, and that is exactly 
 4. **Flags oven clashes.** If two dishes in the oven want different temperatures at the same time, it says so, with the exact minutes and both temperatures, so you can cook them in turn or use two shelves.
 5. **Spots the rest window.** While the joint rests out of the oven, the oven is free and still hot. That is the moment for crisp roast potatoes, and Readyby tells you when the gap opens.
 6. **Reminds you to put the leftovers away.** Cooked food left in the danger zone (40F to 140F) grows bacteria fast, so the plan ends with the time the leftovers need to be in the fridge: two hours after serving, or one hour if the room is hot (tick the box for a summer table or a warm kitchen).
+7. **Holds a dish that's ready early.** When something finishes before you're serving, the "keep it warm" panel says how to hold it safely: covered in a warm oven at 70-80C (160-175F) to stay above the 60C / 140F safe line, tented in foil for a 30-45 minute rest, or left on the side under the 2-hour rule. It warns when the hold would run past the point where safety or quality gives out.
 
 ## How the schedule is built
 
