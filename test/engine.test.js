@@ -241,3 +241,23 @@ test("keepWarm: left out follows the 2-hour rule", () => {
 test("keepWarm: defaults to the warm-oven method", () => {
   assert.equal(R.keepWarm({ minutesEarly: 20 }).method, "warm-oven");
 });
+
+// Thaw time from frozen, by the USDA Big Thaw rates.
+test("thaw: fridge is a day range (24h per 4-5 lb), cold water 30 min per lb", () => {
+  var t = R.thawTime("15 lb");
+  // fridge: 15/5 = 3 days to 15/4 = 3.75 days
+  assert.equal(t.fridgeDaysLow, 3);
+  assert.equal(t.fridgeDaysHigh, 3.8); // 90h/24 rounded to 1dp
+  assert.equal(t.fridgeHoursLow, 72);
+  assert.equal(t.fridgeHoursHigh, 90);
+  // cold water: 15 x 0.5 = 7.5 hours
+  assert.equal(t.waterHours, 7.5);
+});
+
+test("thaw: reads kilograms too, and rejects a bad weight", () => {
+  var t = R.thawTime("4 kg"); // ~8.82 lb
+  assert.ok(t.lb > 8.7 && t.lb < 8.9);
+  assert.ok(t.fridgeDaysHigh > t.fridgeDaysLow);
+  assert.equal(R.thawTime("not a weight"), null);
+  assert.equal(R.thawTime(""), null);
+});
