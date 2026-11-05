@@ -84,11 +84,25 @@
       html += '<label class="field"><span>How you like it</span><select id="doneness">' + opts + "</select></label>";
     }
     html += '<p class="meat-note">' + dish.note + "</p>";
+    html += '<p class="thaw-note" id="thaw-note"></p>';
     meatDetail.innerHTML = html;
     var w = document.getElementById("weight");
-    w.addEventListener("input", function () { meatWeight = w.value; });
+    w.addEventListener("input", function () { meatWeight = w.value; updateThaw(); });
     var dn = document.getElementById("doneness");
     if (dn) dn.addEventListener("change", function () { meatDoneness = dn.value; });
+    updateThaw();
+  }
+
+  // If the joint is weighed, show how long it needs to thaw from frozen so it
+  // isn't still icy in the middle on the day. Hidden until there's a weight.
+  function updateThaw() {
+    var el = document.getElementById("thaw-note");
+    if (!el) return;
+    var t = R.thawTime(meatWeight);
+    if (!t) { el.textContent = ""; return; }
+    var days = t.fridgeDaysLow === t.fridgeDaysHigh ? t.fridgeDaysLow : t.fridgeDaysLow + " to " + t.fridgeDaysHigh;
+    el.textContent = "From frozen: about " + days + " day" + (t.fridgeDaysHigh === 1 ? "" : "s") +
+      " to thaw in the fridge, or about " + t.waterHours + " hours in cold water (change the water every 30 minutes, then cook straight away).";
   }
 
   function collectItems() {

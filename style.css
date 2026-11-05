@@ -233,3 +233,7 @@ button { font: inherit; }
 .kw-field input, .kw-field select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); width: 100%; }
 .kw-note { margin: 12px 0 0; font-size: 14px; }
 .kw-note.warn { color: var(--warn, #b5701c); font-weight: 600; }
+
+/* thaw-from-frozen note, shown once the joint has a weight */
+.thaw-note:empty { display: none; }
+.thaw-note { margin: 6px 0 0; color: var(--accent); font-size: .9rem; font-weight: 600; }
