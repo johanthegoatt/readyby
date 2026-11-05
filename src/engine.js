@@ -192,6 +192,29 @@
     return isKg ? num * 2.2046226 : num;
   }
 
+  // How long a frozen joint takes to thaw, by the USDA "Big Thaw" rates:
+  //   - In the fridge, allow about 24 hours for every 4 to 5 lb. That's the
+  //     only hands-off, food-safe method, so it's given as a day range.
+  //   - In cold water (in a leak-proof bag, water changed every 30 minutes),
+  //     about 30 minutes per pound, and it must be cooked straight after.
+  // The point is to start thawing in time: a big bird can need days, and a
+  // turkey left to thaw the night before is still frozen in the middle.
+  function thawTime(weight) {
+    var lb = pounds(weight);
+    if (lb == null) return null;
+    var fridgeHoursHigh = 24 * lb / 4;   // slower end (24 h per 4 lb)
+    var fridgeHoursLow = 24 * lb / 5;    // faster end (24 h per 5 lb)
+    var waterHours = lb * 0.5;           // 30 min per lb
+    return {
+      lb: Math.round(lb * 10) / 10,
+      fridgeHoursLow: Math.round(fridgeHoursLow),
+      fridgeHoursHigh: Math.round(fridgeHoursHigh),
+      fridgeDaysLow: Math.round(fridgeHoursLow / 24 * 10) / 10,
+      fridgeDaysHigh: Math.round(fridgeHoursHigh / 24 * 10) / 10,
+      waterHours: Math.round(waterHours * 10) / 10
+    };
+  }
+
   // ---- cooking time for one dish -----------------------------------------
 
   // Returns { low, high } minutes for a dish. Weight dishes multiply the per-lb
@@ -492,6 +515,7 @@
     fmtTime: fmtTime,
     fmtDuration: fmtDuration,
     pounds: pounds,
+    thawTime: thawTime,
     cookTime: cookTime,
     pullTemp: pullTemp,
     ovenPull: ovenPull,
