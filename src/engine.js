@@ -358,6 +358,7 @@
       ovenConflicts: ovenConflicts,
       restWindow: rest,
       holding: holding,
+      preheat: preheatStep(planned),
       steps: steps
     };
   }
@@ -413,8 +414,34 @@
 
   // Build the ordered action list. Each oven/hob dish becomes a "start" step;
   // meats add an "out and rest" step; the meal ends with a "serve" step.
+  // A cold oven takes time to come up to heat, and the first dish is timed as if
+  // the oven is already hot, so Readyby adds a "turn the oven on" step ahead of
+  // the first oven dish. The preheat is a little longer for a hotter oven. You
+  // preheat to the hottest dish that goes in first; the cooler dishes join once
+  // it's down to their temperature, or share the heat.
+  function preheatStep(planned) {
+    var ovenDishes = planned.filter(function (p) { return p.kind === "oven" && p.ovenInAt != null; });
+    if (!ovenDishes.length) return null;
+    var earliest = ovenDishes.reduce(function (a, p) { return Math.min(a, p.ovenInAt); }, Infinity);
+    // Preheat to the hottest dish going in at that earliest time.
+    var temp = ovenDishes.filter(function (p) { return p.ovenInAt <= earliest; })
+      .reduce(function (t, p) { return Math.max(t, p.tempF || 0); }, 0);
+    if (!(temp > 0)) temp = ovenDishes.reduce(function (t, p) { return Math.max(t, p.tempF || 0); }, 350);
+    var mins = Math.max(10, Math.min(20, Math.round(10 + (temp - 300) / 25)));
+    return { at: earliest - mins, tempF: temp, mins: mins, earliest: earliest };
+  }
+
   function buildSteps(planned, serve) {
     var steps = [];
+    var pre = preheatStep(planned);
+    if (pre) {
+      steps.push({
+        at: pre.at,
+        kind: "preheat",
+        dish: null,
+        text: "Turn the oven on to " + pre.tempF + "F to preheat (about " + pre.mins + " min)"
+      });
+    }
     planned.forEach(function (p) {
       steps.push({
         at: p.startAt,
@@ -436,7 +463,7 @@
     steps.push({ at: serve, kind: "serve", dish: null, text: "Dish up and serve" });
     steps.sort(function (a, b) {
       if (a.at !== b.at) return a.at - b.at;
-      var order = { start: 0, rest: 1, serve: 2 };
+      var order = { preheat: -1, start: 0, rest: 1, serve: 2 };
       return order[a.kind] - order[b.kind];
     });
     return steps;
@@ -521,6 +548,7 @@
     ovenPull: ovenPull,
     holdingWindow: holdingWindow,
     keepWarm: keepWarm,
+    preheatStep: preheatStep,
     planMeal: planMeal
   };
 });
