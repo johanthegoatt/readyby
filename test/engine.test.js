@@ -261,3 +261,28 @@ test("thaw: reads kilograms too, and rejects a bad weight", () => {
   assert.equal(R.thawTime("not a weight"), null);
   assert.equal(R.thawTime(""), null);
 });
+
+test("preheat: an oven dish gets a turn-the-oven-on step before it starts", function () {
+  var r = R.planMeal({ serveTime: "18:00", items: [{ id: "roast-potatoes" }] });
+  assert.ok(r.ok);
+  assert.ok(r.preheat, "has a preheat");
+  assert.strictEqual(r.preheat.tempF, 425);        // roast potatoes are 425F
+  assert.ok(r.preheat.mins >= 10 && r.preheat.mins <= 20);
+  assert.ok(r.preheat.at < r.preheat.earliest);    // comes before the oven goes in
+  var pre = r.steps.filter(function (s) { return s.kind === "preheat"; });
+  assert.strictEqual(pre.length, 1);
+  assert.strictEqual(r.steps[0].kind, "preheat");  // it's the first action
+});
+
+test("preheat: a hob-only meal has no preheat step", function () {
+  var r = R.planMeal({ serveTime: "18:00", items: [{ id: "steamed-veg" }] });
+  assert.ok(r.ok);
+  assert.strictEqual(r.preheat, null);
+  assert.strictEqual(r.steps.filter(function (s) { return s.kind === "preheat"; }).length, 0);
+});
+
+test("preheat: a hotter oven preheats for longer", function () {
+  var hot = R.preheatStep([{ kind: "oven", ovenInAt: 100, tempF: 450 }]);
+  var cool = R.preheatStep([{ kind: "oven", ovenInAt: 100, tempF: 325 }]);
+  assert.ok(hot.mins >= cool.mins);
+});
