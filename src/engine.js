@@ -217,8 +217,23 @@
 
   // ---- cooking time for one dish -----------------------------------------
 
+  // A fan (convection) oven moves hot air around, so it cooks faster than a
+  // conventional oven at the same dial setting — by roughly a tenth. The usual
+  // advice is to drop the temperature about 20C (around 25F) and keep the time,
+  // or keep the temperature and take about 10% off the time. Readyby takes the
+  // time off, so the schedule moves, and names the lower dial setting as the
+  // alternative. Only oven dishes are affected; the hob and finishing jobs are
+  // not. (Fan guidance from oven makers and standard conversion tables.)
+  var FAN_TIME_FACTOR = 0.9;   // ~10% faster
+  var FAN_TEMP_DROP_F = 25;    // ~20C lower dial, the alternative to cutting time
+
+  function fanTempF(tempF) {
+    return tempF == null ? null : tempF - FAN_TEMP_DROP_F;
+  }
+
   // Returns { low, high } minutes for a dish. Weight dishes multiply the per-lb
-  // range by the weight; beef and lamb also scale by the chosen doneness.
+  // range by the weight; beef and lamb also scale by the chosen doneness. A fan
+  // oven cuts the time of oven dishes by about a tenth.
   function cookTime(dish, opts) {
     opts = opts || {};
     if (!dish) return null;
@@ -235,6 +250,9 @@
     } else {
       low = dish.minFixed[0];
       high = dish.minFixed[1];
+    }
+    if (opts.fan && dish.kind === "oven") {
+      low *= FAN_TIME_FACTOR; high *= FAN_TIME_FACTOR;
     }
     return { low: Math.round(low), high: Math.round(high) };
   }
@@ -298,7 +316,7 @@
       var it = items[i];
       var dish = byId(it.id);
       if (!dish) return { ok: false, error: "Unknown dish: " + it.id };
-      var ct = cookTime(dish, it);
+      var ct = cookTime(dish, { weight: it.weight, doneness: it.doneness, fan: input.fan });
       if (!ct) return { ok: false, error: "Add a weight for the " + dish.name.toLowerCase() + "." };
 
       var rest = dish.rest || 0;
@@ -313,6 +331,7 @@
         name: dish.name,
         kind: dish.kind,
         tempF: dish.tempF || null,
+        fanTempF: input.fan && dish.kind === "oven" ? fanTempF(dish.tempF) : null,
         icon: dish.icon,
         note: dish.note,
         weight: dish.byWeight ? pounds(it.weight) : null,
@@ -352,6 +371,8 @@
     return {
       ok: true,
       serveTime: serve,
+      fan: !!input.fan,
+      fanTempDropF: FAN_TEMP_DROP_F,
       firstStart: firstStart,
       totalSpan: serve - firstStart,
       items: planned,
@@ -537,6 +558,9 @@
     DONENESS: DONENESS,
     HOLD_NORMAL_MINS: HOLD_NORMAL_MINS,
     HOLD_HOT_MINS: HOLD_HOT_MINS,
+    FAN_TIME_FACTOR: FAN_TIME_FACTOR,
+    FAN_TEMP_DROP_F: FAN_TEMP_DROP_F,
+    fanTempF: fanTempF,
     byId: byId,
     parseTime: parseTime,
     fmtTime: fmtTime,
