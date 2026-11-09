@@ -8,6 +8,7 @@
 
   var serveEl = document.getElementById("serve");
   var hotRoomEl = document.getElementById("hot-room");
+  var fanEl = document.getElementById("fan");
   var chipsMeat = document.getElementById("chips-meat");
   var chipsOven = document.getElementById("chips-oven");
   var chipsHob = document.getElementById("chips-hob");
@@ -140,7 +141,7 @@
       return;
     }
     if (window.Ding) window.Ding.react("thinking");
-    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked });
+    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked, fan: fanEl && fanEl.checked });
     result.classList.remove("hidden");
     if (!out.ok) {
       if (window.Ding) window.Ding.react("worried");
@@ -167,6 +168,12 @@
         R.fmtTime(out.restWindow.from) + " (" + R.fmtDuration(out.restWindow.minutes) + " while it rests). " +
         out.restWindow.suggest.join(" and ") + " then " +
         (out.restWindow.suggest.length > 1 ? "have" : "has") + " the oven to themselves, so turn it up.</p>";
+    }
+    if (out.fan) {
+      // The common rule of thumb is a 20C or 25F drop; the two aren't exact
+      // conversions of each other, so show the familiar pair rather than a
+      // calculated one.
+      w += '<p class="hint">Fan oven: the oven times above are cut about 10%. The other way round, keep these times and set each oven dish about 20&deg;C (25&deg;F) lower than a conventional recipe says.</p>';
     }
     warnings.innerHTML = w;
 
@@ -207,7 +214,7 @@
 
   function copyPlan() {
     var items = collectItems();
-    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked });
+    var out = R.planMeal({ serveTime: serveEl.value, items: items, hotRoom: hotRoomEl && hotRoomEl.checked, fan: fanEl && fanEl.checked });
     if (!out.ok) return;
     var lines = ["Readyby plan - serve at " + R.fmtTime(out.serveTime), ""];
     out.steps.forEach(function (s) { lines.push(R.fmtTime(s.at) + "  " + s.text); });
