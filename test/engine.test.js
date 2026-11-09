@@ -286,3 +286,37 @@ test("preheat: a hotter oven preheats for longer", function () {
   var cool = R.preheatStep([{ kind: "oven", ovenInAt: 100, tempF: 325 }]);
   assert.ok(hot.mins >= cool.mins);
 });
+
+// --- fan oven ---
+
+test("a fan oven cuts an oven dish's time by about a tenth", function () {
+  var dish = R.byId("roast-potatoes") || R.CATALOG.find(function (d) { return d.kind === "oven" && !d.byWeight; });
+  var normal = R.cookTime(dish, {});
+  var fan = R.cookTime(dish, { fan: true });
+  assert.ok(fan.high < normal.high, "fan is faster");
+  assert.strictEqual(fan.high, Math.round(normal.high * R.FAN_TIME_FACTOR));
+});
+
+test("a fan oven doesn't change a hob dish", function () {
+  var hob = R.CATALOG.find(function (d) { return d.kind === "hob"; });
+  if (!hob) return; // no hob dish to check
+  var normal = R.cookTime(hob, {});
+  var fan = R.cookTime(hob, { fan: true });
+  assert.deepStrictEqual(fan, normal);
+});
+
+test("fanTempF drops the dial by the fan amount", function () {
+  assert.strictEqual(R.fanTempF(350), 350 - R.FAN_TEMP_DROP_F);
+  assert.strictEqual(R.fanTempF(null), null);
+});
+
+test("the plan starts oven dishes later with a fan oven", function () {
+  var oven = R.CATALOG.find(function (d) { return d.kind === "oven" && !d.byWeight; });
+  var base = { serveTime: "18:00", items: [{ id: oven.id }] };
+  var normal = R.planMeal(base);
+  var fan = R.planMeal({ serveTime: "18:00", items: [{ id: oven.id }], fan: true });
+  assert.ok(normal.ok && fan.ok);
+  assert.strictEqual(fan.fan, true);
+  assert.ok(fan.items[0].startAt >= normal.items[0].startAt, "fan dish starts no earlier");
+  assert.strictEqual(fan.items[0].fanTempF, oven.tempF - R.FAN_TEMP_DROP_F);
+});
