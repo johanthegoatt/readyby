@@ -320,3 +320,38 @@ test("the plan starts oven dishes later with a fan oven", function () {
   assert.ok(fan.items[0].startAt >= normal.items[0].startAt, "fan dish starts no earlier");
   assert.strictEqual(fan.items[0].fanTempF, oven.tempF - R.FAN_TEMP_DROP_F);
 });
+
+test("a joint gets a temper range, a side does not", () => {
+  const chicken = R.CATALOG.find(d => d.id === "chicken");
+  const greens = R.CATALOG.find(d => d.id === "steamed-veg");
+  assert.ok(R.temperTime(chicken));
+  assert.strictEqual(R.temperTime(greens), null);
+});
+
+test("temper time is held to the 2-hour food-safety cap", () => {
+  const t = R.temperTime({ temper: [60, 180] });
+  assert.strictEqual(t.high, 120);
+  assert.strictEqual(t.capped, true);
+});
+
+test("the plan tells you to take the joint out of the fridge before it goes in", () => {
+  const out = R.planMeal({ serveTime: "18:00", items: [{ id: "chicken", weight: "4" }] });
+  assert.ok(out.ok);
+  const chicken = out.items[0];
+  assert.ok(chicken.temper);
+  // the temper step is earlier than the oven-in time
+  assert.ok(chicken.temperAt < chicken.startAt);
+  // and planned off the longer time by the high temper figure
+  assert.strictEqual(chicken.temperAt, chicken.startAt - chicken.temper.high);
+  const temperStep = out.steps.find(s => s.kind === "temper");
+  assert.ok(temperStep, "temper step present");
+  assert.ok(/fridge/.test(temperStep.text));
+  // it comes first in the ordered steps
+  assert.strictEqual(out.steps[0].kind, "temper");
+});
+
+test("a hob-only meal has no temper step", () => {
+  const out = R.planMeal({ serveTime: "18:00", items: [{ id: "steamed-veg" }] });
+  assert.ok(out.ok);
+  assert.strictEqual(out.steps.filter(s => s.kind === "temper").length, 0);
+});
