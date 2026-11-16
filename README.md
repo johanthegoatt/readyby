@@ -22,6 +22,8 @@ The fix is to work backwards from the time you want to eat, and that is exactly 
 6. **Reminds you to put the leftovers away.** Cooked food left in the danger zone (40F to 140F) grows bacteria fast, so the plan ends with the time the leftovers need to be in the fridge: two hours after serving, or one hour if the room is hot (tick the box for a summer table or a warm kitchen).
 7. **Holds a dish that's ready early.** When something finishes before you're serving, the "keep it warm" panel says how to hold it safely: covered in a warm oven at 70-80C (160-175F) to stay above the 60C / 140F safe line, tented in foil for a 30-45 minute rest, or left on the side under the 2-hour rule. It warns when the hold would run past the point where safety or quality gives out.
 
+8. **Reminds you to take the joint out of the fridge.** A roast put in fridge-cold cooks unevenly and runs long, so the timeline starts with a "take it out to lose the chill" step, 30 to 60 minutes before it goes in depending on the cut. The counter time is held to the USDA two-hour limit for food left out, so it never crosses into unsafe.
+
 ## How the schedule is built
 
 Each dish has a cooking time and, for the meats, a rest. Readyby sets each dish's finish point (serving time for the sides, serving time minus the rest for the meats) and subtracts the cooking time to get the start. It plans from the longer end of each time range, so you are never caught short, then merges every start and every "take it out to rest" into one ordered list you follow top to bottom.
