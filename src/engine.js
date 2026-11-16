@@ -45,6 +45,7 @@
       byWeight: true,
       minPerLb: [20, 25],
       rest: 15,
+      temper: [30, 45],
       safeF: 165,
       carryover: [5, 8],
       icon: "chicken",
@@ -58,6 +59,7 @@
       byWeight: true,
       minPerLb: [13, 15],
       rest: 20,
+      temper: [45, 60],
       safeF: 165,
       carryover: [8, 12],
       icon: "turkey",
@@ -71,6 +73,7 @@
       byWeight: true,
       minPerLb: [15, 18],
       rest: 20,
+      temper: [45, 60],
       safeF: 165,
       carryover: [8, 12],
       icon: "turkey",
@@ -84,6 +87,7 @@
       byWeight: true,
       minPerLb: [18, 22], // to a pull around medium; adjusted by doneness below
       rest: 15,
+      temper: [30, 60],
       safeF: 145,
       carryover: [5, 10],
       doneness: true,
@@ -98,6 +102,7 @@
       byWeight: true,
       minPerLb: [20, 22],
       rest: 10,
+      temper: [30, 45],
       safeF: 145,
       carryover: [5, 10],
       icon: "pork",
@@ -111,6 +116,7 @@
       byWeight: true,
       minPerLb: [15, 20],
       rest: 15,
+      temper: [30, 60],
       safeF: 145,
       carryover: [5, 8],
       doneness: true,
@@ -294,6 +300,22 @@
     };
   }
 
+  // Taking the chill off. A joint put in the oven fridge-cold cooks unevenly
+  // and runs longer: the outside is done before the middle catches up. Letting
+  // it sit on the counter first, loosely covered, brings it closer to room
+  // temperature so it cooks evenly and to time. Food safety caps this: the USDA
+  // "2-hour rule" says perishable food shouldn't sit out above 40F for more than
+  // two hours in total, so the counter time is held to 120 minutes. Returns the
+  // low/high minutes for the dish, capped, or null for a dish that isn't a joint.
+  var TEMPER_MAX_MINS = 120; // USDA 2-hour rule for food left out
+
+  function temperTime(dish) {
+    if (!dish || !dish.temper) return null;
+    var low = Math.min(dish.temper[0], TEMPER_MAX_MINS);
+    var high = Math.min(dish.temper[1], TEMPER_MAX_MINS);
+    return { low: low, high: high, capped: dish.temper[1] > TEMPER_MAX_MINS };
+  }
+
   // ---- the plan -----------------------------------------------------------
 
   // planMeal({ serveTime, items: [{ id, weight?, doneness? }] })
@@ -326,6 +348,11 @@
       var startHigh = outAt - ct.high;
       var startLow = outAt - ct.low;
 
+      // A joint comes out of the fridge to lose the chill before it goes in, so
+      // it cooks evenly. Timed off the longer start so it isn't rushed back in.
+      var temper = temperTime(dish);
+      var temperAt = temper ? startHigh - temper.high : null;
+
       planned.push({
         id: dish.id,
         name: dish.name,
@@ -338,6 +365,8 @@
         doneness: dish.doneness && it.doneness ? it.doneness : null,
         cook: ct,
         rest: rest,
+        temper: temper,
+        temperAt: temperAt,
         pull: pullTemp(dish, it),
         ovenPull: ovenPull(dish, it),
         startAt: startHigh,          // plan from the longer estimate
@@ -464,6 +493,14 @@
       });
     }
     planned.forEach(function (p) {
+      if (p.temper && p.temperAt != null) {
+        steps.push({
+          at: p.temperAt,
+          kind: "temper",
+          dish: p.name,
+          text: "Take " + p.name + " out of the fridge to lose the chill (" + p.temper.low + "-" + p.temper.high + " min on the side, so it cooks evenly)"
+        });
+      }
       steps.push({
         at: p.startAt,
         kind: "start",
@@ -484,7 +521,7 @@
     steps.push({ at: serve, kind: "serve", dish: null, text: "Dish up and serve" });
     steps.sort(function (a, b) {
       if (a.at !== b.at) return a.at - b.at;
-      var order = { preheat: -1, start: 0, rest: 1, serve: 2 };
+      var order = { temper: -2, preheat: -1, start: 0, rest: 1, serve: 2 };
       return order[a.kind] - order[b.kind];
     });
     return steps;
@@ -568,6 +605,7 @@
     pounds: pounds,
     thawTime: thawTime,
     cookTime: cookTime,
+    temperTime: temperTime,
     pullTemp: pullTemp,
     ovenPull: ovenPull,
     holdingWindow: holdingWindow,
